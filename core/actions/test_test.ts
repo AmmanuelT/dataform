@@ -481,11 +481,19 @@ SELECT 1 AS a, 2 AS b`,
     const projectDir = tmpDirFixture.createNewTmpDir();
     const workflowSettingsPath = path.join(projectDir, "workflow_settings.yaml");
     const definitionsDir = path.join(projectDir, "definitions");
+    const actionsYamlPath = path.join(definitionsDir, "actions.yaml");
     const actionSqlxPath = path.join(definitionsDir, "action.sqlx");
     const actionTestSqlxPath = path.join(definitionsDir, "action_test.sqlx");
 
     fs.writeFileSync(workflowSettingsPath, VALID_WORKFLOW_SETTINGS_YAML);
     fs.mkdirSync(definitionsDir);
+    fs.writeFileSync(
+      actionsYamlPath,
+      `
+actions:
+- declaration:
+    name: a_declaration`,
+    );
 
     fs.writeFileSync(
       actionSqlxPath,
@@ -493,7 +501,7 @@ SELECT 1 AS a, 2 AS b`,
 config {
   type: "incremental",
 }
-SELECT id AS a FROM \${ref("source")}
+SELECT id AS a FROM \${ref("a_declaration")}
 \${when(incremental(), \` WHERE id > 0\`)}
     `,
     );
@@ -504,7 +512,7 @@ config {
   type: "test",
   dataset: "action"
 }
-input "source" {
+input "a_declaration" {
   SELECT 1 AS id
 }
 SELECT 1 AS a`,

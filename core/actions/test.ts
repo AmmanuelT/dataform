@@ -250,12 +250,6 @@ export class Test extends ActionBuilder<dataform.Test> {
           this.proto.fileName,
         );
         return this.proto;
-      } else if (dataset instanceof IncrementalTable) {
-        this.session.compileError(
-          new Error("Running tests on incremental datasets is not yet supported."),
-          this.proto.fileName,
-        );
-        return this.proto;
       } else {
         const refReplacingContext = new RefReplacingContext(testContext);
         this.proto.testQuery = refReplacingContext.apply(dataset.contextableQuery);
