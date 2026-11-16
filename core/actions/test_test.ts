@@ -477,7 +477,7 @@ SELECT 1 AS a, 2 AS b`,
     );
   });
 
-  test(`test with incremental table`, () => {
+  test(`test on an incremental table uses the full-refresh query`, () => {
     const projectDir = tmpDirFixture.createNewTmpDir();
     const workflowSettingsPath = path.join(projectDir, "workflow_settings.yaml");
     const definitionsDir = path.join(projectDir, "definitions");
@@ -493,7 +493,8 @@ SELECT 1 AS a, 2 AS b`,
 config {
   type: "incremental",
 }
-SELECT 1 AS a
+SELECT id AS a FROM \${ref("source")}
+\${when(incremental(), \` WHERE id > 0\`)}
     `,
     );
     fs.writeFileSync(
@@ -503,15 +504,18 @@ config {
   type: "test",
   dataset: "action"
 }
+input "source" {
+  SELECT 1 AS id
+}
 SELECT 1 AS a`,
     );
 
     const result = runMainInVm(coreExecutionRequestFromPath(projectDir));
 
-    expect(result.compile.compiledGraph.graphErrors.compilationErrors.length).equals(1);
-    expect(result.compile.compiledGraph.graphErrors.compilationErrors[0].message).contains(
-      `Running tests on incremental datasets is not yet supported.`,
-    );
+    expect(result.compile.compiledGraph.graphErrors.compilationErrors).deep.equals([]);
+    const testQuery = result.compile.compiledGraph.tests[0].testQuery;
+    expect(testQuery).to.contain("SELECT id AS a FROM (\n  SELECT 1 AS id\n)");
+    expect(testQuery).to.not.contain("WHERE id > 0");
   });
 
   test(`test with includeTestsInCompiledGraph set`, () => {

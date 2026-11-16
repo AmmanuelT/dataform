@@ -324,7 +324,7 @@ config {
 
 ### `test` (Unit Tests)
 
-Validates the SQL logic of a target `dataset` (`table`, `view`, or `incremental` action) by replacing its upstream `ref()` inputs with static mock queries (`input "<ref_name>" { ... }`) and comparing the output against an expected query. Executed via `dataform test` or `dataform run --run-tests`.
+Validates the SQL logic of a target `dataset` (`table`, `view`, or `incremental` action) by replacing its upstream `ref()` inputs with static mock queries (`input "<ref_name>" { ... }`) and comparing the output against an expected query. Incremental actions are tested using their full-refresh query (`incremental()` is `false`); tests do not cover incremental-only query logic or merge/append behavior. Executed via `dataform test` or `dataform run --run-tests`.
 
 ```sql
 -- definitions/tests/orders_by_day_test.sqlx
